@@ -50,6 +50,7 @@ class Task(models.Model):
         choices=PRIORITY_CHOICES, 
         default="medium"
     )
+    
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES, 
@@ -61,12 +62,19 @@ class Task(models.Model):
         on_delete=models.CASCADE, 
         related_name="tasks"
     )
-    assigned_user = models.ForeignKey(
+
+    assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        null=True, blank=True, 
         related_name="assigned_tasks"
+    )
+
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, blank=True, 
+        related_name="reviewed_tasks"
     )
 
     class Meta:
