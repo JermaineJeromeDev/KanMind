@@ -19,7 +19,7 @@ class BoardListView(APIView):
 
     def get(self, request):
         queryset = self.get_queryset()
-        serializer = self.get_serializer_class(queryset, many=True)
+        serializer = self.get_serializer_class()(queryset, many=True)
         return Response(serializer.data)
     
     def post(self, request):
