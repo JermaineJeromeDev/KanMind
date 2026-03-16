@@ -4,7 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board
-from .serializers import BoardListSerializer, BoardCreateSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer
+from .permissions import IsOwnerOrMember
 
 
 class BoardListView(APIView):
@@ -40,3 +41,20 @@ class BoardListView(APIView):
         return Board.objects.filter(
             Q(owner=user) | Q(members=user)).distinct()
     
+
+class BoardDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerOrMember]
+    serializer_class = BoardDetailSerializer
+
+    def get(self, request, pk):
+        try:
+            board = Board.objects.get(pk=pk)
+            self.check_object_permissions(request, board)
+            serializer = self.serializer_class(board)
+            return Response(serializer.data)
+            
+        except Board.DoesNotExist:
+            return Response(
+                {"error": "Board not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

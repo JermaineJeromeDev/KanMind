@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from auth_app.models import CustomUser
-from ..models import Board
+from ..models import Board, Task
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -58,3 +58,33 @@ class BoardCreateSerializer(BoardListSerializer):
         board = Board.objects.create(**validated_data)
         board.members.set(members_data)
         return board
+    
+
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "email", "fullname"]
+
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+    assignee = UserPublicSerializer(read_only=True)
+    reviewer = UserPublicSerializer(read_only=True)
+    comments_count = serializers.IntegerField(default=0, read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id", "title", "description", "status", 
+            "priority", "assignee", "reviewer", 
+            "due_date", "comments_count"
+        ]
+
+
+class BoardDetailSerializer(serializers.ModelSerializer):
+    members = UserPublicSerializer(many=True, read_only=True)
+    tasks = TaskDetailSerializer(many=True, read_only=True)
+    owner_id = serializers.ReadOnlyField(source='owner.id')
+
+    class Meta:
+        model = Board
+        fields = ["id", "title", "owner_id", "members", "tasks"]
