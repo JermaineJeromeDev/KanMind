@@ -37,7 +37,7 @@ class Task(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ("todo", "To Do"),
+        ("to-do", "To Do"),
         ("in_progress", "In Progress"),
         ("done", "Done")
     ]
@@ -54,7 +54,7 @@ class Task(models.Model):
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES, 
-        default="todo"
+        default="to-do"
     )
 
     board = models.ForeignKey(

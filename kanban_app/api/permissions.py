@@ -6,3 +6,8 @@ class IsOwnerOrMember(permissions.BasePermission):
         is_member = obj.members.filter(id=request.user.id).exists()
 
         return is_owner or is_member
+
+
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
