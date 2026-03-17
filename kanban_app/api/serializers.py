@@ -30,7 +30,7 @@ class BoardListSerializer(serializers.ModelSerializer):
         return obj.tasks.count()
 
     def get_tasks_to_do_count(self, obj):
-        return obj.tasks.filter(status="todo").count()
+        return obj.tasks.filter(status="to-do").count()
 
     def get_tasks_high_prio_count(self, obj):
         return obj.tasks.filter(priority="high").count()
@@ -74,7 +74,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            "id", "board", "title", "description", "status", 
+            "id", "title", "description", "status", 
             "priority", "assignee", "reviewer", 
             "due_date", "comments_count"
         ]
