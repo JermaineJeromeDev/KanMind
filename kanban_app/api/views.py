@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
 from .permissions import IsOwnerOrMember, IsOwner
 
 
@@ -48,8 +48,6 @@ class BoardDetailView(APIView):
     serializer_class = BoardDetailSerializer
 
     def get_permissions(self):
-        if self.request.method == 'PATCH':
-            return [IsAuthenticated(), IsOwner()]
         return [IsAuthenticated(), IsOwnerOrMember()]
 
     def get(self, request, pk):
@@ -60,3 +58,18 @@ class BoardDetailView(APIView):
             return Response(serializer.data)
         except Board.DoesNotExist:
             return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    def patch(self, request, pk):
+        try:
+            board = Board.objects.get(pk=pk)
+            self.check_object_permissions(request, board)
+
+            serializer = BoardUpdateSerializer(board, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Board.DoesNotExist:
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+

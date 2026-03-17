@@ -88,3 +88,19 @@ class BoardDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ["id", "title", "owner_id", "members", "tasks"]
+
+
+class BoardUpdateSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(many=True, queryset=CustomUser.objects.all())
+
+    class Meta:
+        model = Board
+        fields = ["title", "members"]
+
+    def to_representation(self, instance):
+        return {
+            "id": instance.id,
+            "title": instance.title,
+            "owner_data": UserPublicSerializer(instance.owner).data,
+            "members_data": UserPublicSerializer(instance.members.all(), many=True).data
+        }
