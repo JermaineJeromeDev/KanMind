@@ -48,6 +48,8 @@ class BoardDetailView(APIView):
     serializer_class = BoardDetailSerializer
 
     def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated(), IsOwner]
         return [IsAuthenticated(), IsOwnerOrMember()]
 
     def get(self, request, pk):
@@ -72,4 +74,12 @@ class BoardDetailView(APIView):
         except Board.DoesNotExist:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
+    def delete(self, request, pk):
+        try:
+            board = Board.objects.get(pk=pk)
+            self.check_object_permissions(request, board)
+            board.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Board.DoesNotExist:
+            return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
 
