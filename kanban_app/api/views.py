@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..models import Board
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
+from ..models import Board, Task
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer
 from .permissions import IsOwnerOrMember, IsOwner
 
 
@@ -83,3 +83,18 @@ class BoardDetailView(APIView):
         except Board.DoesNotExist:
             return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+class AssignedTasksListView(APIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.none()
+    serializer_class = TaskDetailSerializer
+    
+    def get(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Task.objects.filter(Q(assignee=user) | Q(reviewer=user))
+    
