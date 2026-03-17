@@ -19,3 +19,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop("repeated_password")
         validated_data["username"] = validated_data["email"]
         return CustomUser.objects.create_user(**validated_data)
+    
+
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "email", "fullname"]

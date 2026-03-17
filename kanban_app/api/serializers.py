@@ -1,7 +1,7 @@
 from rest_framework import serializers
-
 from auth_app.models import CustomUser
 from ..models import Board, Task
+from auth_app.api.serializers import UserPublicSerializer
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -59,12 +59,6 @@ class BoardCreateSerializer(BoardListSerializer):
         board.members.set(members_data)
         return board
     
-
-class UserPublicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ["id", "email", "fullname"]
-
 
 class TaskDetailSerializer(serializers.ModelSerializer):
     assignee = UserPublicSerializer(read_only=True)
