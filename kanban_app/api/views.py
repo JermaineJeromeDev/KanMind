@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import status  
+from rest_framework import status 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -97,4 +97,18 @@ class AssignedTasksListView(APIView):
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(Q(assignee=user) | Q(reviewer=user))
+    
+
+class ReviewTasksListView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TaskDetailSerializer
+    queryset = Task.objects.none()
+
+    def get(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+    
+    def get_queryset(self):
+        return Task.objects.filter(reviewer=self.request.user)
     
