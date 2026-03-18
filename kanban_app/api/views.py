@@ -3,9 +3,9 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..models import Board, Task
+from ..models import Board, Task, Comment
 from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer, CommentSerializer, CommentCreateSerializer
-from .permissions import IsOwnerOrMember, IsOwner, IsBoardMemberForTask, IsTaskAuthorOrBoardOwner
+from .permissions import IsOwnerOrMember, IsOwner, IsBoardMemberForTask, IsTaskAuthorOrBoardOwner, IsCommentAuthor
 
 
 class BoardListView(APIView):
@@ -187,3 +187,17 @@ class CommentListView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Task.DoesNotExist:
             return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class CommentDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsCommentAuthor]
+    queryset = Comment.objects.all()
+
+    def delete(self, request, task_id, comment_id):
+        try:
+            comment = Comment.objects.het(pk=comment_id, task_id=task_id)
+            self.check_object_permissions(request, comment)
+            comment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Comment.DoesNotExist:
+            return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
