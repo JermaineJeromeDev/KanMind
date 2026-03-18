@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from auth_app.models import CustomUser
-from ..models import Board, Task
+from ..models import Board, Task, Comment
 from auth_app.api.serializers import UserPublicSerializer
 
 
@@ -140,3 +140,16 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return TaskDetailSerializer(instance).data
+    
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ["id", "created_at", "author", "content"]
+
+    def get_author(self, obj):
+        if obj.author:
+            return obj.author.fullname
+        return "Deleted User"

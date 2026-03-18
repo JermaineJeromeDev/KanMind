@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board, Task
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer, CommentSerializer
 from .permissions import IsOwnerOrMember, IsOwner, IsBoardMemberForTask, IsTaskAuthorOrBoardOwner
 
 
@@ -126,8 +126,6 @@ class TaskCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-# kanban_app/api/views.py
-
 class TaskDetailView(APIView):
     queryset = Task.objects.all()
     serializer_class = TaskUpdateSerializer
@@ -155,5 +153,21 @@ class TaskDetailView(APIView):
             self.check_object_permissions(request, task)
             task.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        except Task.DoesNotExist:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CommentListView(APIView):
+    permission_classes = [IsAuthenticated, IsBoardMemberForTask]
+    serializer_class = CommentSerializer
+
+    def get(self, request, task_id):
+        try:
+            task = Task.objects.get(pk=task_id)
+            self.check_object_permissions(request, task)
+
+            comments = task.comments.all()
+            serializer = self.serializer_class(comments, many=True)
+            return Response(serializer.data)
         except Task.DoesNotExist:
             return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
