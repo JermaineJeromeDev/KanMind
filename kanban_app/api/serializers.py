@@ -162,7 +162,6 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
-        validated_data['task_id'] = self.context['task_id']
         return super().create(validated_data)
     
     def to_representation(self, instance):

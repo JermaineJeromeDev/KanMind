@@ -78,47 +78,34 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return self.destroy(request, *args, **kwargs)
 
 
-class CommentListView(APIView):
+class CommentListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsBoardMemberForTask]
     serializer_class = CommentSerializer
 
-    def get(self, request, task_id):
-        try:
-            task = Task.objects.get(pk=task_id)
-            self.check_object_permissions(request, task)
+    def get_queryset(self):
+        task_id = self.kwargs.get('task_id')
+        return Comment.objects.filter(task_id=task_id)
 
-            comments = task.comments.all()
-            serializer = self.serializer_class(comments, many=True)
-            return Response(serializer.data)
-        except Task.DoesNotExist:
-            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-    def post(self, request, task_id):
-        try:
-            task = Task.objects.get(pk=task_id)
-            self.check_object_permissions(request, task)
-            serializer = CommentCreateSerializer(
-                data=request.data, 
-                context={'request': request, 'task_id': task_id}
-            )
+    def get_serializer_class(self):
+        """Wählt Create-Serializer für POST."""
+        if self.request.method == 'POST':
+            return CommentCreateSerializer
+        return CommentSerializer
 
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Task.DoesNotExist:
-            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+    def perform_create(self, serializer):
+        task_id = self.kwargs.get('task_id')
+        task = generics.get_object_or_404(Task, pk=task_id)
+        self.check_object_permissions(self.request, task)
+        serializer.save(task_id=task_id)
         
 
-class CommentDetailView(APIView):
+class CommentDetailView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsCommentAuthor]
     queryset = Comment.objects.all()
+    lookup_url_kwarg = 'comment_id'
 
-    def delete(self, request, task_id, comment_id):
-        try:
-            comment = Comment.objects.het(pk=comment_id, task_id=task_id)
-            self.check_object_permissions(request, comment)
-            comment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Comment.DoesNotExist:
-            return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request, *args, **kwargs):
+        comment = self.get_object()
+        if str(comment.task_id) != str(self.kwargs.get('task_id')):
+            return Response({"error": "Comment/Task mismatch"}, status=status.HTTP_400_BAD_REQUEST)
+        return self.destroy(request, *args, **kwargs)
