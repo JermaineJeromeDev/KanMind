@@ -63,7 +63,7 @@ class BoardCreateSerializer(BoardListSerializer):
 class TaskDetailSerializer(serializers.ModelSerializer):
     assignee = UserPublicSerializer(read_only=True)
     reviewer = UserPublicSerializer(read_only=True)
-    comments_count = serializers.IntegerField(default=0, read_only=True)
+    comments_count = serializers.IntegerField(source='comments.count', read_only=True)
 
     class Meta:
         model = Task
@@ -153,3 +153,17 @@ class CommentSerializer(serializers.ModelSerializer):
         if obj.author:
             return obj.author.fullname
         return "Deleted User"
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ["content"]
+
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        validated_data['task_id'] = self.context['task_id']
+        return super().create(validated_data)
+    
+    def to_representation(self, instance):
+        return CommentSerializer(instance).data
