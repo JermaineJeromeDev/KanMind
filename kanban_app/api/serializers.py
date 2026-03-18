@@ -98,3 +98,25 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
             "owner_data": UserPublicSerializer(instance.owner).data,
             "members_data": UserPublicSerializer(instance.members.all(), many=True).data
         }
+    
+
+class TaskCreateSerializer(serializers.ModelSerializer):
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), source='assignee', write_only=True, required=False, allow_null=True
+    )
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), source='reviewer', write_only=True, required=False, allow_null=True
+    )
+
+    class Meta:
+        model = Task
+        fields = ["board", "title", "description", "status", "priority", "assignee_id", "reviewer_id", "due_date"]
+
+    def validate_board(self, value):
+        user = self.context['request'].user
+        if not (value.owner == user or value.members.filter(id=user.id).exists()):
+            raise serializers.ValidationError("You are not a member of this board.")
+        return value
+    
+    def to_representation(self, instance):
+        return TaskDetailSerializer(instance).data

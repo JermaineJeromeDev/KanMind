@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board, Task
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer
 from .permissions import IsOwnerOrMember, IsOwner
 
 
@@ -112,3 +112,15 @@ class ReviewTasksListView(APIView):
     def get_queryset(self):
         return Task.objects.filter(reviewer=self.request.user)
     
+
+class TaskCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TaskCreateSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data, 
+                                        context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
