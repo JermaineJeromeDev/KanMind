@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import status 
+from rest_framework import viewsets, status 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,80 +8,35 @@ from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetail
 from .permissions import IsOwnerOrMember, IsOwner, IsBoardMemberForTask, IsTaskAuthorOrBoardOwner, IsCommentAuthor
 
 
-class BoardListView(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = BoardListSerializer 
-    queryset = Board.objects.none()      
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return BoardCreateSerializer
-        return BoardListSerializer
-
-    def get(self, request):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer_class()(queryset, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        serializer = self.get_serializer_class()(
-            data=request.data, 
-            context={'request': request}
-        )
-        if serializer.is_valid():
-            board = serializer.save()
-            return Response(
-                BoardListSerializer(board).data, 
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class BoardViewSet(viewsets.ModelViewSet):
+    queryset = Board.objects.all()
+    serializer_class = BoardListSerializer
 
     def get_queryset(self):
         user = self.request.user
-        return Board.objects.filter(
-            Q(owner=user) | Q(members=user)).distinct()
+        return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
     
-
-
-class BoardDetailView(APIView):
-    queryset = Board.objects.all()
-    serializer_class = BoardDetailSerializer
-
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return BoardCreateSerializer
+        if self.action == 'retrieve':
+            return BoardDetailSerializer
+        if self.action == 'partial_update':
+            return BoardUpdateSerializer
+        return BoardListSerializer
+    
     def get_permissions(self):
-        if self.request.method == 'DELETE':
-            return [IsAuthenticated(), IsOwner]
+        if self.action == 'destroy':
+            return [IsAuthenticated(), IsOwner()]
         return [IsAuthenticated(), IsOwnerOrMember()]
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        board = serializer.save()
+        return Response(BoardListSerializer(board).data, status=status.HTTP_201_CREATED)
 
-    def get(self, request, pk):
-        try:
-            board = Board.objects.get(pk=pk)
-            self.check_object_permissions(request, board)
-            serializer = self.serializer_class(board)
-            return Response(serializer.data)
-        except Board.DoesNotExist:
-            return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-    def patch(self, request, pk):
-        try:
-            board = Board.objects.get(pk=pk)
-            self.check_object_permissions(request, board)
 
-            serializer = BoardUpdateSerializer(board, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Board.DoesNotExist:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-    def delete(self, request, pk):
-        try:
-            board = Board.objects.get(pk=pk)
-            self.check_object_permissions(request, board)
-            board.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Board.DoesNotExist:
-            return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class AssignedTasksListView(APIView):
