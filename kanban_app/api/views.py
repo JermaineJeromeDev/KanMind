@@ -56,20 +56,16 @@ class ReviewTasksListView(generics.ListAPIView):
         return Task.objects.filter(reviewer=self.request.user)
 
 
-class TaskCreateView(APIView):
+class TaskCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskCreateSerializer
+    queryset = Task.objects.all()
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data, 
-                                        context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+    def perform_create(self, serializer):
+        serializer.save()
 
-class TaskDetailView(APIView):
+
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskUpdateSerializer
 
@@ -78,26 +74,8 @@ class TaskDetailView(APIView):
             return [IsAuthenticated(), IsTaskAuthorOrBoardOwner()]
         return [IsAuthenticated(), IsBoardMemberForTask()]
 
-    def patch(self, request, pk):
-        try:
-            task = Task.objects.get(pk=pk)
-            self.check_object_permissions(request, task)
-            serializer = self.serializer_class(task, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Task.DoesNotExist:
-            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    def delete(self, request, pk):
-        try:
-            task = Task.objects.get(pk=pk)
-            self.check_object_permissions(request, task)
-            task.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Task.DoesNotExist:
-            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
 
 class CommentListView(APIView):
