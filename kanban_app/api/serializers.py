@@ -118,6 +118,10 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You are not a member of this board.")
         return value
     
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)
+    
     def to_representation(self, instance):
         return TaskDetailSerializer(instance).data
     

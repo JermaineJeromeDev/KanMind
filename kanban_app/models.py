@@ -77,6 +77,12 @@ class Task(models.Model):
         related_name="reviewed_tasks"
     )
 
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="created_tasks"
+    )
+
     class Meta:
         verbose_name = "Task"
         verbose_name_plural = "Tasks"
