@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import viewsets, status 
+from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -37,36 +37,24 @@ class BoardViewSet(viewsets.ModelViewSet):
         return Response(BoardListSerializer(board).data, status=status.HTTP_201_CREATED)
 
 
-
-
-class AssignedTasksListView(APIView):
+class AssignedTasksListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Task.objects.none()
     serializer_class = TaskDetailSerializer
-    
-    def get(self, request):
-        queryset = self.get_queryset()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-    
+    queryset = Task.objects.all()
+
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(Q(assignee=user) | Q(reviewer=user))
-    
 
-class ReviewTasksListView(APIView):
+
+class ReviewTasksListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskDetailSerializer
-    queryset = Task.objects.none()
+    queryset = Task.objects.all()
 
-    def get(self, request):
-        queryset = self.get_queryset()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-    
     def get_queryset(self):
         return Task.objects.filter(reviewer=self.request.user)
-    
+
 
 class TaskCreateView(APIView):
     permission_classes = [IsAuthenticated]
