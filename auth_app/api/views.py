@@ -55,14 +55,6 @@ class LoginView(APIView):
             "email": user.email,
             "user_id": user.id
         }
-    
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        request.user.auth_token.delete()  
-        return Response({"detail": "Logout erfolgreich."}, status=status.HTTP_200_OK)
 
 
 User = get_user_model()
