@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board, Task
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer
-from .permissions import IsOwnerOrMember, IsOwner
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer
+from .permissions import IsOwnerOrMember, IsOwner, IsBoardMemberForTask
 
 
 class BoardListView(APIView):
@@ -124,3 +124,21 @@ class TaskCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class TaskDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsBoardMemberForTask]
+    serializer_class = TaskUpdateSerializer
+    queryset = Task.objects.all()
+
+    def patch(self, request, pk):
+        try:
+            task = Task.objects.get(pk=pk)
+            self.check_object_permissions(request, task)
+            serializer = self.serializer_class(task, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Task.DoesNotExist:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)

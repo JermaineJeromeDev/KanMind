@@ -120,3 +120,19 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         return TaskDetailSerializer(instance).data
+    
+
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), source='assignee', write_only=True, required=False, allow_null=True
+    )
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), source='reviewer', write_only=True, required=False, allow_null=True
+    )
+
+    class Meta:
+        model = Task
+        fields = ["title", "description", "status", "priority", "assignee_id", "reviewer_id", "due_date"]
+
+    def to_representation(self, instance):
+        return TaskDetailSerializer(instance).data
