@@ -1,5 +1,6 @@
 from django.db.models import Q
 from rest_framework import viewsets, status, generics
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board, Task, Comment
@@ -76,8 +77,10 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         return [IsAuthenticated(), IsBoardMemberForTask()]
 
     def delete(self, request, *args, **kwargs):
+        task_id = self.kwargs.get('pk')
+        if task_id and not str(task_id).isdigit():
+            raise ValidationError("Ungültige Anfragedaten. Die übermittelte Task-ID ist fehlerhaft.")     
         return self.destroy(request, *args, **kwargs)
-
 
 class CommentListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsBoardMemberForTask]
@@ -85,6 +88,8 @@ class CommentListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         task_id = self.kwargs.get('task_id')
+        task = generics.get_object_or_404(Task, pk=task_id)
+        self.check_object_permissions(self.request, task)
         return Comment.objects.filter(task_id=task_id)
 
     def get_serializer_class(self):
