@@ -138,10 +138,12 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
     assignee_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(), source='assignee', write_only=True, required=False, allow_null=True
+        queryset=CustomUser.objects.all(), source='assignee', 
+        write_only=True, required=False, allow_null=True
     )
     reviewer_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(), source='reviewer', write_only=True, required=False, allow_null=True
+        queryset=CustomUser.objects.all(), source='reviewer', 
+        write_only=True, required=False, allow_null=True
     )
 
     class Meta:
@@ -149,8 +151,17 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         fields = ["title", "description", "status", "priority", "assignee_id", "reviewer_id", "due_date"]
 
     def to_representation(self, instance):
-        return TaskDetailSerializer(instance).data
-    
+        return {
+            "id": instance.id,
+            "title": instance.title,
+            "description": instance.description,
+            "status": instance.status,
+            "priority": instance.priority,
+            "assignee": UserPublicSerializer(instance.assignee).data if instance.assignee else None,
+            "reviewer": UserPublicSerializer(instance.reviewer).data if instance.reviewer else None,
+            "due_date": instance.due_date.isoformat() if instance.due_date else None
+        }
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
