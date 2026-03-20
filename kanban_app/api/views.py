@@ -93,7 +93,6 @@ class CommentListView(generics.ListCreateAPIView):
         return Comment.objects.filter(task_id=task_id)
 
     def get_serializer_class(self):
-        """Wählt Create-Serializer für POST."""
         if self.request.method == 'POST':
             return CommentCreateSerializer
         return CommentSerializer
@@ -111,7 +110,11 @@ class CommentDetailView(generics.DestroyAPIView):
     lookup_url_kwarg = 'comment_id'
 
     def delete(self, request, *args, **kwargs):
+        task_id = self.kwargs.get('task_id')
+        comment_id = self.kwargs.get('comment_id')
+        if (task_id and not str(task_id).isdigit()) or (comment_id and not str(comment_id).isdigit()):
+            raise ValidationError("Ungültige Anfragedaten. Die übermittelte ID ist fehlerhaft.") 
         comment = self.get_object()
-        if str(comment.task_id) != str(self.kwargs.get('task_id')):
-            return Response({"error": "Comment/Task mismatch"}, status=status.HTTP_400_BAD_REQUEST)
+        if str(comment.task_id) != str(task_id):
+            return Response({"error": "Ungültige Anfragedaten"}, status=status.HTTP_400_BAD_REQUEST)   
         return self.destroy(request, *args, **kwargs)
