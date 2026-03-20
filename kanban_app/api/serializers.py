@@ -1,7 +1,9 @@
-from rest_framework import serializers
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers, exceptions
 from auth_app.models import CustomUser
 from ..models import Board, Task, Comment
 from auth_app.api.serializers import UserPublicSerializer
+
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -64,11 +66,12 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     assignee = UserPublicSerializer(read_only=True)
     reviewer = UserPublicSerializer(read_only=True)
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
+    board = serializers.PrimaryKeyRelatedField(read_only=True) 
 
     class Meta:
         model = Task
         fields = [
-            "id", "title", "description", "status", 
+            "id", "board","title", "description", "status", 
             "priority", "assignee", "reviewer", 
             "due_date", "comments_count"
         ]
@@ -107,6 +110,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     reviewer_id = serializers.PrimaryKeyRelatedField(
         queryset=CustomUser.objects.all(), source='reviewer', write_only=True, required=False, allow_null=True
     )
+    board = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Task
@@ -114,9 +118,15 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
     def validate_board(self, value):
         user = self.context['request'].user
-        if not (value.owner == user or value.members.filter(id=user.id).exists()):
-            raise serializers.ValidationError("You are not a member of this board.")
-        return value
+    
+        try:
+            board_instance = Board.objects.get(pk=value)
+        except Board.DoesNotExist:
+            raise exceptions.NotFound("Board nicht gefunden. Die angegebene Board-ID existiert nicht.")
+
+        if not (board_instance.owner == user or board_instance.members.filter(id=user.id).exists()):
+            raise exceptions.PermissionDenied("Verboten. Der Benutzer muss Mitglied des Boards sein, um eine Task zu erstellen.")       
+        return board_instance
     
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
