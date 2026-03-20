@@ -74,7 +74,7 @@ Following the project's **Definition of Done (DoD)**, the architecture is modula
     ```bash
     python manage.py runserver
     ```
-    The API is now live at: **http://127.0.0.1**
+    The API is now live at: **http://127.0.0.1:8000/**
 
 ---
 
