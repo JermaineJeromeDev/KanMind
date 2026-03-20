@@ -44,7 +44,7 @@ class LoginView(APIView):
             return Response(self._format_login_data(user, token))
             
         return Response(
-            {"error": "Invalid credentials"},
+            {"error": "Ungültige Anfragedaten. E-Mail oder Passwort ist nicht korrekt."},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -66,11 +66,11 @@ class EmailCheckView(APIView):
     def get(self, request):
         email = request.query_params.get('email')
         if not email:
-            return Response({"error": "Email is missing"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Ungültige Anfrage. Die E-Mail-Adresse fehlt oder hat ein falsches Format."}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             user = User.objects.get(email=email)
             serializer = UserPublicSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
-            return Response({"error": "Email not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Email nicht gefunden. Die Email exestiert nicht"}, status=status.HTTP_404_NOT_FOUND)
