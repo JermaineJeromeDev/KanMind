@@ -15,38 +15,38 @@ To get the project running locally, follow these steps:
 
 1. **Clone the repository:**
 ```bash
-   git clone <your-repository-url>
-   cd <project-folder>
+git clone <your-repository-url>
+cd <project-folder>
 ```
 
 2. **Set up a virtual environment:**
 ```bash
-    python -m venv venv
-    # Activate on Windows:
-    .\venv\Scripts\activate
-    # Activate on macOS/Linux:
-    source venv/bin/activate
+python -m venv venv
+# Activate on Windows:
+.\venv\Scripts\activate
+# Activate on macOS/Linux:
+source venv/bin/activate
 ```
 
 3. **Install dependencies:**
 ```bash
-    pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 4. **Environment Variables:**
 Create a .env file in the root directory and add your SECRET_KEY:
 ```bash
-    SECRET_KEY=your_secure_django_secret_key
+SECRET_KEY=your_secure_django_secret_key
 ```
 
 5. **Database Initialization:**
 ```bash
-    python manage.py migrate
+python manage.py migrate
 ```
 
 6. **Start the Development Server:**
 ```bash
-    python manage.py runserver
+python manage.py runserver
 ```
 
 The API is now available at http://127.0.0.1:8000/
