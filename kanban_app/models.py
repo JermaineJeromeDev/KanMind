@@ -38,7 +38,8 @@ class Task(models.Model):
 
     STATUS_CHOICES = [
         ("to-do", "To Do"),
-        ("in_progress", "In Progress"),
+        ("in-progress", "In Progress"),
+        ("review", "Review"),
         ("done", "Done")
     ]
 
@@ -47,14 +48,12 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
     priority = models.CharField(
         max_length=10, 
-        choices=PRIORITY_CHOICES, 
-        default="medium"
+        choices=PRIORITY_CHOICES
     )
     
     status = models.CharField(
         max_length=20, 
-        choices=STATUS_CHOICES, 
-        default="to-do"
+        choices=STATUS_CHOICES
     )
 
     board = models.ForeignKey(
