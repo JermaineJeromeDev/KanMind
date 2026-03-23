@@ -71,16 +71,18 @@ Following the project's **Definition of Done (DoD)**, the architecture is modula
    cp .env.template .env
     ```
     Open the new .env file and add your SECRET_KEY.
-    (Note: You can generate a secure key using python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())' in your terminal.)
+    (Note: You can generate a secure key using in your terminal.)
+   ```bash
+     python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())" 
+   ```
 
-
-5.  **Database & Admin Setup:**
+6.  **Database & Admin Setup:**
     ```bash
     python manage.py migrate
     python manage.py createsuperuser
     ```
 
-6.  **Run Server**:
+7.  **Run Server**:
     ```bash
     python manage.py runserver
     ```
