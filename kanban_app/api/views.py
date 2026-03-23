@@ -24,32 +24,25 @@ from .serializers import (
 
 
 class BoardViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for Board operations. 
-    Uses annotation to prevent N+1 issues in list views.
-    """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
 
     def get_queryset(self):
         """
-        Returns boards with pre-calculated counts for the list action.
+        Optimized visibility logic. 
+        Shows only own/member boards in list, but allows 403 checks for details.
         """
         user = self.request.user
-        queryset = Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
-
         if self.action == 'list':
-            return queryset.annotate(
+            return Board.objects.filter(
+                Q(owner=user) | Q(members=user)
+            ).distinct().annotate(
                 ann_member_count=Count('members', distinct=True),
                 ann_ticket_count=Count('tasks', distinct=True),
-                ann_todo_count=Count(
-                    'tasks', filter=Q(tasks__status='to-do'), distinct=True
-                ),
-                ann_high_prio_count=Count(
-                    'tasks', filter=Q(tasks__priority='high'), distinct=True
-                )
+                ann_todo_count=Count('tasks', filter=Q(tasks__status='to-do'), distinct=True),
+                ann_high_prio_count=Count('tasks', filter=Q(tasks__priority='high'), distinct=True)
             )
-        return queryset
+        return Board.objects.all()
 
     def get_serializer_class(self):
         """Selects serializer based on action."""
