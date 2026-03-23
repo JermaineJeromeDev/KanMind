@@ -166,7 +166,6 @@ class CommentDetailView(generics.DestroyAPIView):
         Ensures 400 status for ID mismatch as per documentation.
         """
         task_id = self.kwargs.get('task_id')
-        
         if str(instance.task_id) != str(task_id):
             raise ValidationError("Ungültige Anfragedaten. Task-ID Mismatch.")
         instance.delete()
@@ -177,8 +176,6 @@ class CommentDetailView(generics.DestroyAPIView):
         """
         c_id = self.kwargs.get('comment_id')
         t_id = self.kwargs.get('task_id')
-        
         if not str(c_id).isdigit() or not str(t_id).isdigit():
             raise ValidationError("Ungültige Anfragedaten. ID fehlerhaft.")
-            
         return super().get_object()
