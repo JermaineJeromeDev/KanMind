@@ -3,14 +3,8 @@ Custom permissions for the kanban_app.
 Defines access control for Boards, Tasks, and Comments.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (DRF)
 from rest_framework import permissions
-
-# 3. Local
-# (None required)
 
 
 class IsOwnerOrMember(permissions.BasePermission):

@@ -3,9 +3,6 @@ Views for the auth_app.
 Handles user registration, login, and email existence checks.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django & DRF)
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status

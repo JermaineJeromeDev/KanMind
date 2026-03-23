@@ -3,9 +3,6 @@ Models for the auth_app.
 Defines the custom user model used for authentication.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django)
 from django.contrib.auth.models import AbstractUser
 from django.db import models

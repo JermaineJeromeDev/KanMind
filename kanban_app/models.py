@@ -3,15 +3,9 @@ Models for the kanban_app.
 Defines the structure for Boards, Tasks, and Comments.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django)
 from django.conf import settings
 from django.db import models
-
-# 3. Local
-# (None required)
 
 
 class Board(models.Model):

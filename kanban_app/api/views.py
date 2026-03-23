@@ -3,13 +3,10 @@ Views for the kanban_app.
 Handles CRUD operations for Boards, Tasks, and Comments using ViewSets and Generics.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django & DRF)
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework import generics, status, viewsets
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -28,20 +25,34 @@ from .serializers import (
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for Board operations. Filters querysets based on user membership.
+    ViewSet for Board operations. 
+    Uses annotation to prevent N+1 issues in list views.
     """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
 
     def get_queryset(self):
-        """Returns boards where the user is either owner or member."""
+        """
+        Returns boards with pre-calculated counts for the list action.
+        """
         user = self.request.user
+        queryset = Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
+
         if self.action == 'list':
-            return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
-        return Board.objects.all()
+            return queryset.annotate(
+                ann_member_count=Count('members', distinct=True),
+                ann_ticket_count=Count('tasks', distinct=True),
+                ann_todo_count=Count(
+                    'tasks', filter=Q(tasks__status='to-do'), distinct=True
+                ),
+                ann_high_prio_count=Count(
+                    'tasks', filter=Q(tasks__priority='high'), distinct=True
+                )
+            )
+        return queryset
 
     def get_serializer_class(self):
-        """Selects serializer based on the current action."""
+        """Selects serializer based on action."""
         serializer_map = {
             'create': BoardCreateSerializer,
             'retrieve': BoardDetailSerializer,
@@ -50,13 +61,13 @@ class BoardViewSet(viewsets.ModelViewSet):
         return serializer_map.get(self.action, BoardListSerializer)
 
     def get_permissions(self):
-        """Sets permissions: Owners only for deletion, members for others."""
+        """Sets permissions based on action."""
         if self.action == 'destroy':
             return [IsAuthenticated(), IsOwner()]
         return [IsAuthenticated(), IsOwnerOrMember()]
 
     def create(self, request, *args, **kwargs):
-        """Creates a board and returns the detailed list representation."""
+        """Creates board and returns list representation."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         board = serializer.save()
@@ -141,22 +152,33 @@ class CommentListView(generics.ListCreateAPIView):
 
 
 class CommentDetailView(generics.DestroyAPIView):
-    """Endpoint for deleting a specific comment."""
+    """
+    Endpoint for deleting a specific comment.
+    Ensures ID integrity and task-comment relationship.
+    """
     permission_classes = [IsAuthenticated, IsCommentAuthor]
     queryset = Comment.objects.all()
     lookup_url_kwarg = 'comment_id'
 
-    def delete(self, request, *args, **kwargs):
-        """Validates IDs and task-comment relation before deletion."""
-        t_id = self.kwargs.get('task_id')
-        c_id = self.kwargs.get('comment_id')
-        if not str(t_id).isdigit() or not str(c_id).isdigit():
-            raise ValidationError("Ungültige Anfragedaten. ID fehlerhaft.")
+    def perform_destroy(self, instance):
+        """
+        Validates task relationship before final deletion.
+        Ensures 400 status for ID mismatch as per documentation.
+        """
+        task_id = self.kwargs.get('task_id')
         
-        comment = self.get_object()
-        if str(comment.task_id) != str(t_id):
-            return Response(
-                {"error": "Ungültige Anfragedaten"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return self.destroy(request, *args, **kwargs)
+        if str(instance.task_id) != str(task_id):
+            raise ValidationError("Ungültige Anfragedaten. Task-ID Mismatch.")
+        instance.delete()
+
+    def get_object(self):
+        """
+        Validates ID format before fetching the object to enforce 400 status.
+        """
+        c_id = self.kwargs.get('comment_id')
+        t_id = self.kwargs.get('task_id')
+        
+        if not str(c_id).isdigit() or not str(t_id).isdigit():
+            raise ValidationError("Ungültige Anfragedaten. ID fehlerhaft.")
+            
+        return super().get_object()

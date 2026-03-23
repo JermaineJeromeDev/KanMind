@@ -3,9 +3,6 @@ URL mapping for the auth_app.
 Defines endpoints for registration, login, and email verification.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django)
 from django.urls import path
 

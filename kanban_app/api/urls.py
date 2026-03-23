@@ -3,9 +3,6 @@ URL configuration for the kanban_app.
 Defines endpoints for boards, tasks, and comments using routers and generic views.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django & DRF)
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter

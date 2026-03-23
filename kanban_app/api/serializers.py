@@ -3,11 +3,7 @@ Serializers for the kanban_app.
 Handles data transformation and validation for Boards, Tasks, and Comments.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django & DRF)
-from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, serializers
 
 # 3. Local
@@ -17,7 +13,7 @@ from ..models import Board, Comment, Task
 
 
 class BoardListSerializer(serializers.ModelSerializer):
-    """Serializer for listing boards with calculated counts."""
+    """Serializer for listing boards with optimized count retrieval."""
     member_count = serializers.SerializerMethodField()
     ticket_count = serializers.SerializerMethodField()
     tasks_to_do_count = serializers.SerializerMethodField()
@@ -32,16 +28,21 @@ class BoardListSerializer(serializers.ModelSerializer):
         ]
 
     def get_member_count(self, obj):
-        return obj.members.count() + 1
+        """Uses annotated count or performs fallback query."""
+        count = getattr(obj, 'ann_member_count', obj.members.count())
+        return count + 1
 
     def get_ticket_count(self, obj):
-        return obj.tasks.count()
+        """Uses annotated ticket count or performs fallback query."""
+        return getattr(obj, 'ann_ticket_count', obj.tasks.count())
 
     def get_tasks_to_do_count(self, obj):
-        return obj.tasks.filter(status="to-do").count()
+        """Uses annotated to-do count or performs fallback query."""
+        return getattr(obj, 'ann_todo_count', obj.tasks.filter(status="to-do").count())
 
     def get_tasks_high_prio_count(self, obj):
-        return obj.tasks.filter(priority="high").count()
+        """Uses annotated high priority count or performs fallback query."""
+        return getattr(obj, 'ann_high_prio_count', obj.tasks.filter(priority="high").count())
 
 
 class BoardCreateSerializer(BoardListSerializer):

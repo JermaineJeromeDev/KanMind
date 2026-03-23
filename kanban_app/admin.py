@@ -3,9 +3,6 @@ Admin configuration for the kanban_app.
 Registers Board, Task, and Comment models for the Django admin interface.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django)
 from django.contrib import admin
 

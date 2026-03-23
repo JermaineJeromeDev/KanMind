@@ -2,8 +2,6 @@
 Admin configuration for the auth_app.
 Customizes the Django admin interface for the CustomUser model.
 """
-# 1. Standard library
-# (None required)
 
 # 2. Third-party (Django)
 from django.contrib import admin

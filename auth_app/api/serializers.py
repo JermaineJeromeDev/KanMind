@@ -3,9 +3,6 @@ Serializers for the auth_app.
 Handles user registration, validation, and public user profiles.
 """
 
-# 1. Standard library
-# (None required)
-
 # 2. Third-party (Django & DRF)
 from rest_framework import serializers
 
