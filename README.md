@@ -2,6 +2,14 @@
 
 A professional, robust Backend API for a Kanban Task Management System, engineered with **Django** and **Django REST Framework (DRF)**. This system enables teams to collaborate on projects, track task progress, and discuss requirements in a secure, permission-controlled environment.
 
+## 📋 Table of Contents
+* [Key Features](#-key-features)
+* [Project Structure](#-project-structure)
+* [Getting Started](#-getting-started)
+* [API Endpoints](#-api-endpoints)
+* [Security & Status Codes](#-security--status-codes)
+
+
 ## 🌟 Key Features
 
 *   **User Authentication**: Secure registration and login system using Token-based authentication.
@@ -57,17 +65,19 @@ Following the project's **Definition of Done (DoD)**, the architecture is modula
     pip install -r requirements.txt
     ```
 
-4.  **Environment Variables & Security**:
-    Create a `.env` file in the root directory. You **must** generate and add a `SECRET_KEY` for the application to work:
-    ```env
-    SECRET_KEY=your_generated_secret_key_here
-    DEBUG=True
+4. **Environment Variables**:
+   Create your local environment file by copying the template:
+   ```bash
+   cp .env.template .env
     ```
-    *(Note: Use a tool like `django.core.management.utils.get_random_secret_key()` to generate a secure key.)*
+    Open the new .env file and add your SECRET_KEY.
+    (Note: You can generate a secure key using python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())' in your terminal.)
 
-5.  **Database & Migrations**:
+
+5.  **Database & Admin Setup:**
     ```bash
     python manage.py migrate
+    python manage.py createsuperuser
     ```
 
 6.  **Run Server**:
@@ -125,6 +135,7 @@ All endpoints (except registration/login) require: `Authorization: Token <your-t
 ---
 
 ## 🛡 Security & Status Codes
+
 
 The API strictly follows the documented HTTP status code conventions:
 *   **201 Created**: Resource successfully generated.
