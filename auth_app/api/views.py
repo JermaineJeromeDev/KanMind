@@ -117,6 +117,6 @@ class EmailCheckView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(
-                {"error": "Email nicht gefunden. Die Email exestiert nicht."},
+                {"error": "Email nicht gefunden. Die Email existiert nicht."},
                 status=status.HTTP_404_NOT_FOUND
             )
